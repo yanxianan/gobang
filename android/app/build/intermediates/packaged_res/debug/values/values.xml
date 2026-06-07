@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="board_bg">#E8C887</color>
+    <color name="board_line">#4A2C0F</color>
+    <color name="cinnabar">#B23A48</color>
+    <color name="cinnabar_dark">#8B1E1E</color>
+    <color name="divider">#8B6F4E</color>
+    <color name="gold">#C9A14A</color>
+    <color name="ink_black">#1A1208</color>
+    <color name="ink_brown">#4A2C0F</color>
+    <color name="jade">#3A7D44</color>
+    <color name="jade_light">#7BB870</color>
+    <color name="rice_paper">#F4E8C8</color>
+    <color name="rice_paper_dark">#D9C796</color>
+    <color name="stone_black">#1A1A1A</color>
+    <color name="stone_white">#FAFAFA</color>
+    <color name="text_disabled">#A89070</color>
+    <color name="text_primary">#1A1208</color>
+    <color name="text_secondary">#5C4326</color>
+    <color name="white">#FFFFFF</color>
+    <color name="wood_dark">#B8884A</color>
+    <color name="wood_light">#E8C887</color>
+    <string name="app_name">五子棋 · 联机对弈</string>
+    <string name="btn_back">返回</string>
+    <string name="btn_create">创建房间</string>
+    <string name="btn_draw">求和</string>
+    <string name="btn_emoji">表情</string>
+    <string name="btn_join">加入房间</string>
+    <string name="btn_records">战绩回放</string>
+    <string name="btn_resign">认输</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_send">发送</string>
+    <string name="btn_settings">服务器设置</string>
+    <string name="btn_undo">悔棋</string>
+    <string name="empty_records">暂无战绩</string>
+    <string name="hint_chat">说点什么…</string>
+    <string name="hint_host">服务器地址 (如 1.2.3.4:8080)</string>
+    <string name="hint_nickname">请输入昵称</string>
+    <string name="hint_room_id">请输入4位房间号</string>
+    <string name="settings_tip">示例: 192.168.1.10:8080 或 your.domain.com:8080</string>
+    <string name="status_opp_turn">等待对手走子</string>
+    <string name="status_waiting">等待对手…</string>
+    <string name="status_your_turn">轮到你走</string>
+    <string name="time_30s">30秒/步</string>
+    <string name="time_60s">60秒/步</string>
+    <string name="time_unlimited">不限时</string>
+    <string name="title_home">五子棋 · 联机对弈</string>
+    <string name="title_records">战绩回放</string>
+    <string name="title_settings">服务器设置</string>
+    <style name="GomokuButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/btn_cinnabar</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="GomokuButton.Outline" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/btn_outline</item>
+        <item name="android:textColor">@color/cinnabar</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:padding">10dp</item>
+    </style>
+    <style name="GomokuTextInput" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_input</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_disabled</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="GomokuTextTitle">
+        <item name="android:textColor">@color/ink_brown</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+    <style name="Theme.Gomoku" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/cinnabar</item>
+        <item name="colorPrimaryDark">@color/cinnabar_dark</item>
+        <item name="colorAccent">@color/gold</item>
+        <item name="android:windowBackground">@drawable/bg_rice_paper</item>
+        <item name="android:statusBarColor" ns1:targetApi="lollipop">@color/ink_brown</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="Theme.Gomoku.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="colorPrimary">@color/cinnabar</item>
+        <item name="colorAccent">@color/gold</item>
+    </style>
+</resources>

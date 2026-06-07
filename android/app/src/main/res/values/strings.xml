@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">五子棋 · 联机对弈</string>
+
+    <!-- Home -->
+    <string name="title_home">五子棋 · 联机对弈</string>
+    <string name="hint_nickname">请输入昵称</string>
+    <string name="hint_room_id">请输入4位房间号</string>
+    <string name="time_unlimited">不限时</string>
+    <string name="time_30s">30秒/步</string>
+    <string name="time_60s">60秒/步</string>
+    <string name="btn_create">创建房间</string>
+    <string name="btn_join">加入房间</string>
+    <string name="btn_records">战绩回放</string>
+    <string name="btn_settings">服务器设置</string>
+
+    <!-- Game -->
+    <string name="status_waiting">等待对手…</string>
+    <string name="status_your_turn">轮到你走</string>
+    <string name="status_opp_turn">等待对手走子</string>
+    <string name="btn_undo">悔棋</string>
+    <string name="btn_draw">求和</string>
+    <string name="btn_resign">认输</string>
+    <string name="btn_back">返回</string>
+    <string name="hint_chat">说点什么…</string>
+    <string name="btn_send">发送</string>
+    <string name="btn_emoji">表情</string>
+
+    <!-- Records -->
+    <string name="title_records">战绩回放</string>
+    <string name="empty_records">暂无战绩</string>
+
+    <!-- Settings -->
+    <string name="title_settings">服务器设置</string>
+    <string name="hint_host">服务器地址 (如 1.2.3.4:8080)</string>
+    <string name="btn_save">保存</string>
+    <string name="settings_tip">示例: 192.168.1.10:8080 或 your.domain.com:8080</string>
+</resources>

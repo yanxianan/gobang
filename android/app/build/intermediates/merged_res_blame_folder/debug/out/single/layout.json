@@ -1,0 +1,38 @@
+[
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\item_record.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_record.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\item_chat.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\activity_replay.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_replay.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\activity_game.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_game.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\activity_settings.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\activity_records.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_records.xml"
+    },
+    {
+        "merged": "com.gomoku.app-mergeDebugResources-36:/layout/activity_home.xml",
+        "source": "com.gomoku.app-main-39:/layout/activity_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-mergeDebugResources-36:\\layout\\activity_home.xml",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_home.xml"
+    },
+    {
+        "merged": "com.gomoku.app-mergeDebugResources-36:/layout/activity_game.xml",
+        "source": "com.gomoku.app-main-39:/layout/activity_game.xml"
+    }
+]

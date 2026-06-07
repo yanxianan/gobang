@@ -1,0 +1,94 @@
+[
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_btn_cinnabar.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\btn_cinnabar.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_btn_outline.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\btn_outline.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_rice_paper.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_rice_paper.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_game.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_game.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_item_chat.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\xml\\network_security_config.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_replay.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_replay.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_item_record.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_record.xml"
+    },
+    {
+        "merged": "com.gomoku.app-merged_res-37:/layout_activity_home.xml.flat",
+        "source": "com.gomoku.app-main-39:/layout/activity_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_home.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_emoji_btn.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_emoji_btn.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_settings.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\ic_launcher_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_records.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_records.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_input.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_input.xml"
+    },
+    {
+        "merged": "com.gomoku.app-merged_res-37:/layout_activity_game.xml.flat",
+        "source": "com.gomoku.app-main-39:/layout/activity_game.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_fallback.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\ic_launcher_fallback.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_legacy.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\ic_launcher_legacy.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_card.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_chat.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_chat.xml"
+    }
+]

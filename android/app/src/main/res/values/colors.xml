@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 中式传统色调 -->
+    <color name="ink_black">#1A1208</color>
+    <color name="ink_brown">#4A2C0F</color>
+    <color name="rice_paper">#F4E8C8</color>
+    <color name="rice_paper_dark">#D9C796</color>
+    <color name="wood_light">#E8C887</color>
+    <color name="wood_dark">#B8884A</color>
+    <color name="cinnabar">#B23A48</color>
+    <color name="cinnabar_dark">#8B1E1E</color>
+    <color name="jade">#3A7D44</color>
+    <color name="jade_light">#7BB870</color>
+    <color name="gold">#C9A14A</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_primary">#1A1208</color>
+    <color name="text_secondary">#5C4326</color>
+    <color name="text_disabled">#A89070</color>
+    <color name="divider">#8B6F4E</color>
+
+    <color name="board_bg">#E8C887</color>
+    <color name="board_line">#4A2C0F</color>
+    <color name="stone_black">#1A1A1A</color>
+    <color name="stone_white">#FAFAFA</color>
+</resources>

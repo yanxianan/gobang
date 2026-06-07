@@ -156,4 +156,12 @@ object WebSocketClient {
     fun sendEmoji(emoji: String) {
         send(Envelope(MsgType.EMOJI, mapOf("emoji" to emoji)))
     }
+
+    fun sendRematchRequest() {
+        send(Envelope(MsgType.REMATCH_REQUEST, null))
+    }
+
+    fun sendRematchResponse(accept: Boolean) {
+        send(Envelope(MsgType.REMATCH_RESPONSE, mapOf("accept" to accept)))
+    }
 }

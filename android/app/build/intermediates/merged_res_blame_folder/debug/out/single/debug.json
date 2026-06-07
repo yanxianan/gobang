@@ -20,6 +20,10 @@
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\mipmap-anydpi-v26\\ic_launcher.xml"
     },
     {
+        "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_dialog_game_over.xml.flat",
+        "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\dialog_game_over.xml"
+    },
+    {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_item_chat.xml.flat",
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_chat.xml"
     },
@@ -32,16 +36,16 @@
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\activity_replay.xml"
     },
     {
+        "merged": "com.gomoku.app-merged_res-37:/layout_dialog_game_over.xml.flat",
+        "source": "com.gomoku.app-main-39:/layout/dialog_game_over.xml"
+    },
+    {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_foreground.xml.flat",
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\ic_launcher_foreground.xml"
     },
     {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_item_record.xml.flat",
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\layout\\item_record.xml"
-    },
-    {
-        "merged": "com.gomoku.app-merged_res-37:/layout_activity_home.xml.flat",
-        "source": "com.gomoku.app-main-39:/layout/activity_home.xml"
     },
     {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\layout_activity_home.xml.flat",
@@ -66,10 +70,6 @@
     {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_bg_input.xml.flat",
         "source": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-main-39:\\drawable\\bg_input.xml"
-    },
-    {
-        "merged": "com.gomoku.app-merged_res-37:/layout_activity_game.xml.flat",
-        "source": "com.gomoku.app-main-39:/layout/activity_game.xml"
     },
     {
         "merged": "C:\\Users\\29506\\.gradle\\daemon\\8.4\\com.gomoku.app-merged_res-37:\\drawable_ic_launcher_fallback.xml.flat",

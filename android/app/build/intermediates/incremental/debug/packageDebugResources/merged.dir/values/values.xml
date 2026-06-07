@@ -23,7 +23,7 @@
     <string name="app_name">五子棋 · 联机对弈</string>
     <string name="btn_back">返回</string>
     <string name="btn_create">创建房间</string>
-    <string name="btn_draw">求和</string>
+    <string name="btn_draw">求饶</string>
     <string name="btn_emoji">表情</string>
     <string name="btn_join">加入房间</string>
     <string name="btn_records">战绩回放</string>
@@ -39,7 +39,7 @@
     <string name="hint_room_id">请输入4位房间号</string>
     <string name="settings_tip">示例: 192.168.1.10:8080 或 your.domain.com:8080</string>
     <string name="status_opp_turn">等待对手走子</string>
-    <string name="status_waiting">等待对手…</string>
+    <string name="status_waiting">等待对手加入…</string>
     <string name="status_your_turn">轮到你走</string>
     <string name="time_30s">30秒/步</string>
     <string name="time_60s">60秒/步</string>

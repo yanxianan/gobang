@@ -3205,6 +3205,7 @@ id bounceBoth
 id bounceEnd
 id bounceStart
 id btn_back
+id btn_back_home
 id btn_create
 id btn_draw
 id btn_emoji
@@ -3213,6 +3214,7 @@ id btn_next
 id btn_play
 id btn_prev
 id btn_records
+id btn_rematch
 id btn_resign
 id btn_save
 id btn_send
@@ -3609,8 +3611,11 @@ id transition_transform
 id triangle
 id tv_black_name
 id tv_black_time
+id tv_duration
 id tv_empty
 id tv_info
+id tv_moves
+id tv_my_side
 id tv_name
 id tv_players
 id tv_result
@@ -3618,8 +3623,11 @@ id tv_room
 id tv_room_id
 id tv_status
 id tv_step
+id tv_subtitle
 id tv_text
 id tv_time
+id tv_title
+id tv_waiting
 id tv_white_name
 id tv_white_time
 id unchecked
@@ -3780,6 +3788,7 @@ layout design_navigation_menu
 layout design_navigation_menu_item
 layout design_text_input_end_icon
 layout design_text_input_start_icon
+layout dialog_game_over
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_chat

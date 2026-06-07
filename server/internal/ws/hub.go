@@ -299,6 +299,66 @@ func (h *Hub) handle(client *game.Client, msgType string, payloadRaw interface{}
 		p.FromSeat = client.Seat
 		p.Name = client.Nickname
 		broadcast(client.Room, proto.S2C_Emoji, p, h)
+
+	case proto.C2S_RematchRequest:
+		room := client.Room
+		if room == nil {
+			return
+		}
+		// 若之前被拒绝过, 清除本座位旧的rematch标记, 允许"再求一次"
+		room.ClearRematchRequest(client.Seat)
+		ok, msg := room.RequestRematch(client.Seat)
+		if !ok {
+			sendError(client, "rematch_fail", msg)
+			return
+		}
+		// 只发给"对方", 不发给发送方 (发送方自己知道自己点了"不服再战")
+		var opp *game.Client
+		if client.Seat == 1 {
+			opp = room.Clients[1]
+		} else {
+			opp = room.Clients[0]
+		}
+		if opp != nil {
+			sendJSON(opp, proto.S2C_RematchRequest, proto.RematchRequestPayload{FromSeat: client.Seat})
+		}
+
+	case proto.C2S_RematchResponse:
+		var p proto.RematchResponsePayload
+		b, _ := json.Marshal(payloadRaw)
+		_ = json.Unmarshal(b, &p)
+		room := client.Room
+		if room == nil {
+			return
+		}
+		bothAccept, rejectCount := room.RespondRematch(client.Seat, p.Accept)
+		// 广播给双方
+		broadcast(room, proto.S2C_RematchResponse, proto.RematchResponsePayload{
+			FromSeat: client.Seat,
+			Accept:   p.Accept,
+		}, h)
+		if !p.Accept {
+			// 拒绝: 通知双方, 弹"求对方再战"提示
+			broadcast(room, proto.S2C_RematchCancel, proto.RematchCancelPayload{
+				Reason:      "rejected",
+				RejectCount: rejectCount,
+			}, h)
+			if rejectCount >= 2 {
+				// 连续两次拒绝, 房间销毁
+				h.Manager.RemoveRoom(room.ID)
+			}
+		} else if bothAccept {
+			// 双方都接受, 重置游戏
+			room.ResetForNewGame()
+			broadcast(room, proto.S2C_RematchStart, proto.RematchStartPayload{
+				FirstSeat: room.Turn,
+				TimeLimit: room.TimeLimit,
+				BlackTime: room.BlackTime,
+				WhiteTime: room.WhiteTime,
+				NewGameNo: room.GameNo,
+			}, h)
+			broadcast(room, proto.S2C_RoomState, nil, h)
+		}
 	}
 }
 

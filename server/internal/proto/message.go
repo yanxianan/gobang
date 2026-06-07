@@ -15,6 +15,8 @@ const (
 	C2S_DrawResponse  = "draw_response"    // 和棋响应
 	C2S_Chat          = "chat"             // 聊天
 	C2S_Emoji         = "emoji"            // 表情
+	C2S_RematchRequest = "rematch_request" // 不服再战请求
+	C2S_RematchResponse = "rematch_response" // 不服再战响应
 
 	// S2C 服务端 -> 客户端
 	S2C_Error         = "error"            // 错误
@@ -32,6 +34,10 @@ const (
 	S2C_Emoji         = "emoji"            // 表情
 	S2C_OpponentLeft  = "opponent_left"    // 对手离开
 	S2C_Clock         = "clock"            // 计时
+	S2C_RematchRequest = "rematch_request" // 对方要求再战
+	S2C_RematchResponse = "rematch_response" // 对方对再战的响应
+	S2C_RematchStart   = "rematch_start"   // 双方都同意, 即将开始新一局
+	S2C_RematchCancel  = "rematch_cancel"  // 一方拒绝, 整个房间结束
 )
 
 // 棋子颜色
@@ -155,4 +161,26 @@ type ClockPayload struct {
 	BlackTime int `json:"black_time"`
 	WhiteTime int `json:"white_time"`
 	Turn      int `json:"turn"`
+}
+
+type RematchRequestPayload struct {
+	FromSeat int `json:"from_seat"`
+}
+
+type RematchResponsePayload struct {
+	FromSeat int  `json:"from_seat"`
+	Accept   bool `json:"accept"`
+}
+
+type RematchStartPayload struct {
+	FirstSeat  int `json:"first_seat"`
+	BlackTime  int `json:"black_time"`
+	WhiteTime  int `json:"white_time"`
+	TimeLimit  int `json:"time_limit"`
+	NewGameNo  int `json:"new_game_no"` // 第几局, 从1开始
+}
+
+type RematchCancelPayload struct {
+	Reason         string `json:"reason"`         // rejected / opponent_offline / too_many_rejects
+	RejectCount    int    `json:"reject_count"`   // 当前累积拒绝次数
 }

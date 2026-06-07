@@ -31,17 +31,19 @@ button:disabled { background: #a89070; }
 .row { display: flex; gap: 6px; }
 .row > * { flex: 1; }
 #log {
-    height: 200px; overflow-y: auto; background: #1a0f08; color: #c9a14a;
-    font-family: monospace; font-size: 12px; padding: 8px; border-radius: 6px;
+    height: 180px; overflow-y: auto; background: #1a0f08; color: #c9a14a;
+    font-family: monospace; font-size: 11px; padding: 8px; border-radius: 6px;
     margin-top: 6px;
 }
 #log .me { color: #7bb870; }
 #log .err { color: #ff6b6b; }
 #log .sys { color: #c9a14a; }
+#log .opp { color: #ff9090; }
 .board {
     display: grid; grid-template-columns: repeat(15, 1fr);
     aspect-ratio: 1; background: #e8c887; border: 2px solid #4a2c0f;
     margin: 10px 0; gap: 0;
+    touch-action: none;
 }
 .cell {
     border-right: 1px solid #4a2c0f; border-bottom: 1px solid #4a2c0f;
@@ -61,23 +63,56 @@ button:disabled { background: #a89070; }
 }
 .cell.last::after { box-shadow: 0 0 0 2px red, inset 0 0 3px #888; }
 .cell.last.black::after { box-shadow: 0 0 0 2px red; }
-.cell.win { background: rgba(255,0,0,0.2); }
-.status { font-weight: bold; color: #8b1e1e; padding: 6px 0; text-align: center; }
+.cell.preview.black::before {
+    content: ''; position: absolute; inset: 8%;
+    background: #000; opacity: 0.5; border-radius: 50%;
+}
+.cell.preview.white::before {
+    content: ''; position: absolute; inset: 8%;
+    background: #fff; opacity: 0.5; border-radius: 50%;
+}
+.cell.selected::before {
+    content: ''; position: absolute; inset: 0;
+    border: 3px solid #1a1208;
+    box-shadow:
+        inset calc(100% - 4px) calc(100% - 4px) 0 #1a1208,
+        inset 4px 4px 0 #1a1208;
+}
+.status { font-weight: bold; color: #8b1e1e; padding: 6px 0; text-align: center; min-height: 24px; }
 .btn-group { display: flex; gap: 6px; margin-top: 6px; }
 .btn-group button { margin-top: 0; flex: 1; }
 .btn-outline { background: transparent; color: #b23a48; border: 2px solid #b23a48; }
+.modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; justify-content: center; align-items: center;
+}
+.modal {
+    background: #f4e8c8; border: 2px solid #8b6f4e; border-radius: 12px;
+    padding: 20px; max-width: 90%; min-width: 280px;
+}
+.modal h3 { color: #8b1e1e; text-align: center; margin-bottom: 10px; }
+.modal p { color: #1a1208; margin: 8px 0; }
+.modal-buttons { display: flex; gap: 8px; margin-top: 14px; }
+.modal-buttons button { flex: 1; }
+.emoji-bar { display: flex; gap: 4px; overflow-x: auto; padding: 4px; }
+.emoji-bar button {
+    flex: 0 0 44px; width: 44px; height: 44px; padding: 0;
+    background: #f4e8c8; border: 1px solid #8b6f4e;
+    font-size: 22px; border-radius: 8px; margin: 0;
+}
+.emoji-bar button:hover { background: #d9c796; }
 </style>
 </head>
 <body>
 
-<h2>五 子 棋 · 浏 览 器 测 试</h2>
+<h2>五 子 棋 · 测 试 客 户 端</h2>
 
 <div class="box">
     <label>服务器地址 (WebSocket)</label>
     <input id="serverUrl" value="ws://35.212.227.58:8080/ws" />
     <div class="row">
         <input id="nickname" placeholder="昵称" value="浏览器玩家" />
-        <input id="roomId" placeholder="房间号" value="" maxlength="4" style="max-width:120px" />
+        <input id="roomId" placeholder="4位房间号" maxlength="4" style="max-width:120px" />
     </div>
     <div class="btn-group">
         <button id="btnConnect">连接</button>
@@ -88,7 +123,7 @@ button:disabled { background: #a89070; }
     </div>
     <div class="row" style="margin-top:6px">
         <button id="btnUndo" class="btn-outline">悔棋</button>
-        <button id="btnDraw" class="btn-outline">求和</button>
+        <button id="btnDraw" class="btn-outline">求饶</button>
         <button id="btnResign" class="btn-outline">认输</button>
     </div>
     <div class="status" id="status">未连接</div>
@@ -96,6 +131,11 @@ button:disabled { background: #a89070; }
 
 <div class="box">
     <div id="board" class="board"></div>
+</div>
+
+<div class="box">
+    <label>表情 (左右滑动选择)</label>
+    <div class="emoji-bar" id="emojiBar"></div>
 </div>
 
 <div class="box">
@@ -111,6 +151,15 @@ button:disabled { background: #a89070; }
     <div id="log"></div>
 </div>
 
+<!-- 通用弹窗 -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h3 id="modalTitle">提示</h3>
+        <p id="modalText"></p>
+        <div class="modal-buttons" id="modalButtons"></div>
+    </div>
+</div>
+
 <script>
 const log = (msg, cls='') => {
     const el = document.getElementById('log');
@@ -124,12 +173,20 @@ let mySeat = 0;
 let turn = 1;
 let status = 'waiting';
 let winner = 0;
+let winReason = '';
 let timeLimit = 0;
 let blackTime = 0, whiteTime = 0;
 let cells = Array(15).fill(0).map(() => Array(15).fill(0));
 let lastMove = null;
-let gameStartTime = 0;
-let clockTimer = null;
+let moveCount = 0;
+let gameStartTimestamp = 0;
+let selectedX = -1, selectedY = -1;
+let hoverX = -1, hoverY = -1;
+let blackName = '', whiteName = '';
+let waitingMyRematch = false;
+let myPendingDrawOffer = false;
+let rematchRejectCount = 0;
+let roomId = '';
 
 const boardEl = document.getElementById('board');
 for (let y = 0; y < 15; y++) {
@@ -137,10 +194,15 @@ for (let y = 0; y < 15; y++) {
         const c = document.createElement('div');
         c.className = 'cell';
         c.dataset.x = x; c.dataset.y = y;
-        c.onclick = () => onCellClick(x, y);
         boardEl.appendChild(c);
     }
 }
+boardEl.addEventListener('click', e => {
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const x = +cell.dataset.x, y = +cell.dataset.y;
+    onCellClick(x, y);
+});
 
 function renderBoard() {
     const cellEls = boardEl.children;
@@ -151,24 +213,30 @@ function renderBoard() {
             if (cells[y][x] === 1) el.classList.add('black');
             else if (cells[y][x] === 2) el.classList.add('white');
             if (lastMove && lastMove.x === x && lastMove.y === y) el.classList.add('last');
+            // preview
+            if (status === 'playing' && turn === mySeat && winner === 0
+                && hoverX === x && hoverY === y && cells[y][x] === 0 && selectedX < 0) {
+                el.classList.add('preview');
+                if (mySeat === 1) el.classList.add('black');
+                else el.classList.add('white');
+            }
+            // selected
+            if (selectedX === x && selectedY === y) {
+                el.classList.add('selected');
+            }
         }
     }
 }
 
 function updateStatus() {
     const s = document.getElementById('status');
-    if (status === 'waiting') s.textContent = '等待对手加入…';
-    else if (status === 'playing') s.textContent = (turn === mySeat) ? '★ 轮到你走' : '等待对手…';
-    else if (status === 'finished') s.textContent = '对局结束';
+    if (status === 'waiting') s.textContent = '等待老婆大人…';
+    else if (status === 'playing') {
+        if (selectedX >= 0) s.textContent = '已选位置, 再点一次确认落子 (点其他位置可改选)';
+        else s.textContent = (turn === mySeat) ? '★ 轮到你走' : '老婆在思考中~';
+    }
+    else if (status === 'finished') s.textContent = '本局结束';
     else s.textContent = status;
-}
-
-function startClock() {
-    if (clockTimer) clearInterval(clockTimer);
-    if (timeLimit <= 0) return;
-    clockTimer = setInterval(() => {
-        // server推送 clock事件, 这里只是兜底
-    }, 1000);
 }
 
 document.getElementById('btnConnect').onclick = () => {
@@ -192,28 +260,100 @@ function send(type, payload=null) {
     ws.send(JSON.stringify({ type, payload }));
 }
 
+function showModal(title, text, buttons) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalText').textContent = text;
+    const btnBox = document.getElementById('modalButtons');
+    btnBox.innerHTML = '';
+    for (const b of buttons) {
+        const btn = document.createElement('button');
+        btn.textContent = b.text;
+        if (b.outline) btn.classList.add('btn-outline');
+        btn.onclick = () => {
+            document.getElementById('modal').style.display = 'none';
+            if (b.onClick) b.onClick();
+        };
+        btnBox.appendChild(btn);
+    }
+    document.getElementById('modal').style.display = 'flex';
+}
+
+function showGameOverModal(winner, reason) {
+    const iWon = winner === mySeat;
+    const isDraw = winner === 0;
+    let title, sub;
+    if (isDraw) {
+        title = '🤝 和棋';
+        sub = '势均力敌呀~';
+    } else if (iWon) {
+        title = '🏆 老婆最棒!';
+        sub = reason === 'resign' ? '对方认输了, 真乖~' :
+              reason === 'timeout' ? '对方超时啦, 慢慢来嘛~' :
+              '宝真厉害, 我心服口服~';
+    } else {
+        title = '💔 输啦';
+        sub = reason === 'resign' ? '我...我让你一下啦...' :
+              reason === 'timeout' ? '啊我超时了, 这次不算!' :
+              '呜呜呜, 老婆欺负人~';
+    }
+    const duration = gameStartTimestamp > 0 ?
+        Math.max(1, Math.floor((Date.now() - gameStartTimestamp) / 1000)) : 1;
+    const mySide = mySeat === 1 ? '执黑 (先手)' : mySeat === 2 ? '执白 (后手)' : '观战';
+    const text = `${sub}\n\n对局时长: ${formatDuration(duration)}\n总步数: ${moveCount}\n你的阵营: ${mySide}`;
+    showModal(title, text, [
+        { text: '返回主页', outline: true, onClick: () => goHome() },
+        { text: '不服再战', onClick: () => {
+            send('rematch_request');
+            waitingMyRematch = true;
+            showModal('⏳ 等待回应...', '已发出挑战, 等待老婆的回应~', [
+                { text: '好的', onClick: () => {} }
+            ]);
+        } }
+    ]);
+}
+
+function goHome() {
+    send('leave_room');
+    log('已退出房间');
+    setTimeout(() => location.reload(), 500);
+}
+
+function formatDuration(sec) {
+    if (sec < 60) return `${sec}秒`;
+    return `${Math.floor(sec/60)}分${sec%60}秒`;
+}
+
 function handle(type, p) {
     log('← ' + type + (p ? ' ' + JSON.stringify(p) : ''));
     switch (type) {
         case 'room_created':
             mySeat = p.seat;
+            roomId = p.room_id;
             document.getElementById('roomId').value = p.room_id;
             log('房间创建: ' + p.room_id + ' (你是' + (mySeat===1?'黑':'白') + ')', 'me');
             break;
         case 'room_joined':
             mySeat = p.seat;
+            roomId = p.room_id;
             log('加入房间: ' + p.room_id + ' (你是' + (mySeat===1?'黑':'白') + ')', 'me');
             break;
         case 'room_state':
             status = p.status; turn = p.turn; winner = p.winner;
             cells = p.board; timeLimit = p.time_limit;
             blackTime = p.black_time; whiteTime = p.white_time;
-            if (p.moves && p.moves.length) lastMove = p.moves[p.moves.length-1];
-            renderBoard(); updateStatus(); startClock();
+            blackName = p.black_name; whiteName = p.white_name;
+            if (p.moves && p.moves.length) {
+                lastMove = p.moves[p.moves.length-1];
+                moveCount = p.moves.length;
+            }
+            clearSelection();
+            renderBoard(); updateStatus();
             break;
         case 'game_start':
             status = 'playing'; turn = p.first_seat;
-            gameStartTime = Date.now();
+            gameStartTimestamp = Date.now();
+            moveCount = 0;
+            clearSelection();
             log('游戏开始! ' + (turn===mySeat?'你先手':'对手先手'), 'sys');
             renderBoard(); updateStatus();
             break;
@@ -221,55 +361,160 @@ function handle(type, p) {
             cells[p.y][p.x] = p.seat || turn;
             turn = turn === 1 ? 2 : 1;
             lastMove = { x: p.x, y: p.y };
+            moveCount++;
+            clearSelection();
             renderBoard(); updateStatus();
             break;
         case 'undo_request':
-            if (confirm('对方请求悔棋, 是否同意?')) send('undo_response', { accept: true });
-            else send('undo_response', { accept: false });
+            showModal('悔棋请求', '对方想悔棋, 让不让呀?', [
+                { text: '让ta悔', onClick: () => send('undo_response', { accept: true }) },
+                { text: '不让', outline: true, onClick: () => send('undo_response', { accept: false }) }
+            ]);
             break;
         case 'undo_response':
             log(p.accept ? '对方同意悔棋' : '对方拒绝悔棋', 'sys');
             break;
         case 'draw_offer':
-            if (confirm('对方提议和棋, 是否同意?')) send('draw_response', { accept: true });
-            else send('draw_response', { accept: false });
+            showModal('对方求饶 🥺', '求求你让我一下好不好? 😭\n\n(已向你请求和棋)', [
+                { text: '饶了ta', onClick: () => send('draw_response', { accept: true }) },
+                { text: '绝不轻饶', outline: true, onClick: () => send('draw_response', { accept: false }) }
+            ]);
+            break;
+        case 'draw_response':
+            if (myPendingDrawOffer) {
+                myPendingDrawOffer = false;
+                if (p.accept) {
+                    showModal('🥹 对方心软啦!',
+                        '对方揉了揉你的头:\n"算了算了, 这次就饶了你, 以后可不许再偷懒哦~" 💕',
+                        [{ text: '知道啦~', onClick: () => {} }]
+                    );
+                } else {
+                    showModal('💢 啪! 一巴掌!',
+                        '对方冷酷地拒绝了你, 还反手给了你一巴掌 👋\n\n"给我继续下! 绝不服输!" 😤💥',
+                        [{ text: '呜呜呜', onClick: () => {} }]
+                    );
+                }
+            } else {
+                log(p.accept ? '对方已接受求和' : '对方拒绝求和', 'sys');
+            }
             break;
         case 'game_over':
             winner = p.winner;
+            winReason = p.reason;
             status = 'finished';
-            let msg = '';
-            if (p.reason === 'draw') msg = '和棋!';
-            else if (p.winner === mySeat) msg = '★ 你赢了! (' + p.reason + ')';
-            else msg = '你输了 (' + p.reason + ')';
-            log(msg, 'sys');
-            alert(msg);
             updateStatus();
+            // 弹出结算框
+            setTimeout(() => showGameOverModal(p.winner, p.reason), 200);
             break;
         case 'opponent_left':
             log('对手已离开', 'sys');
-            alert('对手已离开');
+            showModal('💔 老婆走了', '对方已离开对局', [
+                { text: '回主页', onClick: () => goHome() }
+            ]);
             break;
         case 'chat':
-            log('[' + p.name + ']: ' + p.text, 'me');
+            log('[' + p.name + ']: ' + p.text, 'opp');
             break;
         case 'emoji':
-            log('[' + p.name + ']: ' + p.emoji, 'me');
+            log('[' + p.name + ']: ' + p.emoji, 'opp');
             break;
         case 'error':
             log('错误: ' + p.message, 'err');
-            alert(p.message);
             break;
         case 'clock':
             blackTime = p.black_time; whiteTime = p.white_time; turn = p.turn;
             break;
+        case 'rematch_request':
+            // 对方发来"不服再战"
+            showModal('⚔️ 对方不服仍在挑衅!',
+                (p.from_seat === 1 ? blackName : whiteName) + ' 想要再来一局, 宝, 接不接下挑战?',
+                [
+                    { text: '接下挑战', onClick: () => send('rematch_response', { accept: true }) },
+                    { text: '拒绝', outline: true, onClick: () => send('rematch_response', { accept: false }) }
+                ]
+            );
+            break;
+        case 'rematch_response':
+            if (p.accept) {
+                log('对方已接下挑战!', 'me');
+            } else {
+                log('对方拒绝挑战', 'err');
+            }
+            break;
+        case 'rematch_start':
+            log('新一局开始! 第' + p.new_game_no + '局, 轮到' + (p.first_seat===1?'黑':'白') + '方先手', 'sys');
+            waitingMyRematch = false;
+            document.getElementById('modal').style.display = 'none';
+            break;
+        case 'rematch_cancel':
+            rematchRejectCount = p.reject_count;
+            waitingMyRematch = false;
+            const reason = p.reason;
+            if (reason === 'rejected' && rematchRejectCount === 1) {
+                // 第一次拒绝, 可以再求
+                showModal('😢 ta 不愿意...', '老婆大人, 要不要再求一次ta陪人家下棋?', [
+                    { text: '再求一次', onClick: () => {
+                        send('rematch_request');
+                        showModal('⏳ 已再次发出', '等待老婆的回应中...', [
+                            { text: '好的', onClick: () => {} }
+                        ]);
+                    }},
+                    { text: '算了吧', outline: true, onClick: () => goHome() }
+                ]);
+            } else if (reason === 'rejected' && rematchRejectCount >= 2) {
+                // 第二次拒绝
+                showModal('💔 算啦算啦', '对方两次都拒绝啦, 我们回主页吧~', [
+                    { text: '回主页', onClick: () => goHome() }
+                ]);
+            } else if (reason === 'too_many_rejects') {
+                showModal('💔 算啦算啦', '对方两次都拒绝啦, 我们回主页吧~', [
+                    { text: '回主页', onClick: () => goHome() }
+                ]);
+            } else {
+                showModal('💔 算啦算啦', '房间结束啦~', [
+                    { text: '回主页', onClick: () => goHome() }
+                ]);
+            }
+            break;
     }
+}
+
+function clearSelection() {
+    selectedX = -1; selectedY = -1;
+    hoverX = -1; hoverY = -1;
 }
 
 function onCellClick(x, y) {
     if (status !== 'playing') { log('游戏未开始', 'err'); return; }
     if (turn !== mySeat) { log('不是你的回合', 'err'); return; }
     if (cells[y][x] !== 0) { log('该位置已有棋子', 'err'); return; }
-    send('move', { x, y });
+    // 双击落子: 第一次选中, 第二次同一位置才落子
+    if (selectedX === x && selectedY === y) {
+        send('move', { x, y });
+        clearSelection();
+        renderBoard();
+    } else {
+        // 取消hover
+        if (selectedX < 0) {
+            // 第一次选中
+            selectedX = x; selectedY = y;
+        } else {
+            // 改选
+            selectedX = x; selectedY = y;
+        }
+        renderBoard();
+        updateStatus();
+    }
+}
+
+// 表情栏
+const emojis = ['😀','😂','🥰','😘','🤗','💕','💋','😡','😱','🤔','👍','👎','🙏','🎉','😴','🤨','🥺','💪','🙄','😭','🤭'];
+const emojiBar = document.getElementById('emojiBar');
+for (const e of emojis) {
+    const btn = document.createElement('button');
+    btn.textContent = e;
+    btn.onclick = () => send('emoji', { emoji: e });
+    emojiBar.appendChild(btn);
 }
 
 document.getElementById('btnCreate').onclick = () => {
@@ -283,9 +528,16 @@ document.getElementById('btnJoin').onclick = () => {
     send('join_room', { room_id: id, nickname: nick });
 };
 document.getElementById('btnUndo').onclick = () => send('undo_request');
-document.getElementById('btnDraw').onclick = () => send('draw_offer');
+document.getElementById('btnDraw').onclick = () => {
+    // 浏览器端: 也无需确认, 直接发送
+    send('draw_offer');
+    myPendingDrawOffer = true;
+};
 document.getElementById('btnResign').onclick = () => {
-    if (confirm('确认认输?')) send('resign');
+    showModal('认输', '确认认输吗? 真的认输吗?', [
+        { text: '认输', onClick: () => send('resign') },
+        { text: '再战一会', outline: true, onClick: () => {} }
+    ]);
 };
 document.getElementById('btnChat').onclick = () => {
     const t = document.getElementById('chatInput').value.trim();

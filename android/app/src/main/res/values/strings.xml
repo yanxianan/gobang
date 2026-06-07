@@ -15,11 +15,11 @@
     <string name="btn_settings">服务器设置</string>
 
     <!-- Game -->
-    <string name="status_waiting">等待对手…</string>
+    <string name="status_waiting">等待对手加入…</string>
     <string name="status_your_turn">轮到你走</string>
     <string name="status_opp_turn">等待对手走子</string>
     <string name="btn_undo">悔棋</string>
-    <string name="btn_draw">求和</string>
+    <string name="btn_draw">求饶</string>
     <string name="btn_resign">认输</string>
     <string name="btn_back">返回</string>
     <string name="hint_chat">说点什么…</string>

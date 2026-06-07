@@ -1,6 +1,5 @@
 package com.gomoku.app.ui.game
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -8,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,8 +32,16 @@ class GameActivity : AppCompatActivity() {
     private val viewModel: GameViewModel by viewModels()
     private val chatAdapter = ChatAdapter()
     private var lastErrorShown: String? = null
-    private var lastGameOverReason: String? = null
-    private var hasSelectionNow: Boolean = false
+
+    // 当前显示中的结算对话框
+    private var gameOverDialog: GameOverDialog? = null
+    // 当前显示中的 rematch 提议对话框
+    private var rematchOfferDialog: RematchOfferDialog? = null
+    // 对局开始的系统时间, 用于结算框显示
+    private var gameStartTimestamp: Long = 0L
+    // 当前对局步数(从 room_state 推算)
+    @Suppress("unused")
+    private var lastKnownMoves: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +52,9 @@ class GameActivity : AppCompatActivity() {
             WebSocketClient.sendMove(x, y)
         }
         binding.boardView.onSelectionChanged = { hasSelection ->
-            hasSelectionNow = hasSelection
+            lastSelectionState = hasSelection
             if (hasSelection) {
                 binding.tvStatus.text = "已选位置, 再点一次确认落子 (点其他位置可改选)"
-            } else {
-                // 状态栏会在下次 render() 时被重置, 这里不需要操作
             }
         }
 
@@ -57,7 +63,12 @@ class GameActivity : AppCompatActivity() {
 
         binding.btnUndo.setOnClickListener { WebSocketClient.sendUndoRequest() }
         binding.btnResign.setOnClickListener { confirmResign() }
-        binding.btnDraw.setOnClickListener { WebSocketClient.sendDrawOffer() }
+        binding.btnDraw.setOnClickListener {
+            // 点击求饶: 无需确认, 直接发送求和请求给对手
+            WebSocketClient.sendDrawOffer()
+            viewModel.markMyDrawOffer()
+            Toast.makeText(this, "已向对手求饶…🥺", Toast.LENGTH_SHORT).show()
+        }
         binding.btnSend.setOnClickListener {
             val text = binding.etChat.text.toString().trim()
             if (text.isNotEmpty()) {
@@ -68,7 +79,7 @@ class GameActivity : AppCompatActivity() {
         binding.btnEmoji.isClickable = true
         binding.btnEmoji.setOnClickListener { showEmojiDialog() }
 
-        // 表情快捷: 给前8个按钮(布局里已写死)设置点击, 第9个是"+"按钮用于显示更多
+        // 表情快捷栏: 给前 N 个按钮设置点击
         for (i in 0 until binding.emojiBar.childCount) {
             val v = binding.emojiBar.getChildAt(i)
             if (v.id == R.id.btn_emoji) continue
@@ -88,14 +99,14 @@ class GameActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
-            .setTitle("返回")
-            .setMessage("确认离开对局? 离开将直接判负。")
+            .setTitle("退出对局")
+            .setMessage("确认离开? 这一局就判你输啦~")
             .setPositiveButton("确认离开") { _, _ ->
                 WebSocketClient.sendLeaveRoom()
                 WebSocketClient.disconnect()
                 super.onBackPressed()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton("继续下棋", null)
             .show()
     }
 
@@ -104,7 +115,6 @@ class GameActivity : AppCompatActivity() {
         binding.tvBlackName.text = if (s.blackName.isBlank()) "等待黑方" else s.blackName
         binding.tvWhiteName.text = if (s.whiteName.isBlank()) "等待白方" else s.whiteName
 
-        // 计时
         if (s.timeLimit > 0) {
             binding.tvBlackTime.text = formatTime(s.blackTime)
             binding.tvWhiteTime.text = formatTime(s.whiteTime)
@@ -116,21 +126,20 @@ class GameActivity : AppCompatActivity() {
         }
 
         // 状态条
-        val statusText = when {
+        val baseStatus = when {
             s.status == "waiting" && s.mySeat == Stone.BLACK && s.whiteName.isBlank() -> "等待白方加入..."
             s.status == "waiting" && s.mySeat == Stone.WHITE && s.blackName.isBlank() -> "等待黑方加入..."
             s.status == "waiting" -> "等待对手加入..."
             s.status == "playing" -> {
                 if (s.turn == s.mySeat) "轮到你走" else "等待对手走子"
             }
-            s.status == "finished" -> gameOverText(s)
+            s.status == "finished" -> "本局结束"
             else -> ""
         }
-        // 优先显示选中提示
-        binding.tvStatus.text = if (hasSelectionNow && s.status == "playing" && s.turn == s.mySeat) {
+        binding.tvStatus.text = if (s.status == "playing" && s.turn == s.mySeat && hasSelectionCheck()) {
             "已选位置, 再点一次确认落子 (点其他位置可改选)"
         } else {
-            statusText
+            baseStatus
         }
 
         // 棋盘
@@ -146,13 +155,12 @@ class GameActivity : AppCompatActivity() {
 
         // 按钮可用性
         val playing = s.status == "playing"
-        val canMove = playing && s.mySeat != 0 && s.mySeat == s.turn && s.winner == 0
         binding.btnUndo.isEnabled = playing && s.winner == 0
         binding.btnDraw.isEnabled = playing && s.winner == 0
         binding.btnResign.isEnabled = playing && s.winner == 0
-        binding.boardView.alpha = if (canMove || s.winner != 0 || s.status != "playing") 1f else 0.95f
+        binding.boardView.alpha = 1f
 
-        // 聊天
+        // 聊天列表
         if (chatAdapter.items != s.messages) {
             chatAdapter.items = s.messages
             chatAdapter.notifyDataSetChanged()
@@ -163,51 +171,95 @@ class GameActivity : AppCompatActivity() {
 
         // 悔棋弹窗
         if (s.pendingUndo) {
+            viewModel.consumeRematchOffer() // 兜底, 防误触
             AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
                 .setTitle("悔棋请求")
-                .setMessage("对方请求悔棋, 是否同意?")
-                .setPositiveButton("同意") { _, _ -> WebSocketClient.sendUndoResponse(true) }
-                .setNegativeButton("拒绝") { _, _ -> WebSocketClient.sendUndoResponse(false) }
+                .setMessage("对方想悔棋, 让不让呀?")
+                .setPositiveButton("让ta悔") { _, _ -> WebSocketClient.sendUndoResponse(true) }
+                .setNegativeButton("不让") { _, _ -> WebSocketClient.sendUndoResponse(false) }
                 .setCancelable(false)
                 .show()
-            viewModel.clearError()
-            // 通过更新state避免反复弹出
-            // 简化: 一次性消费
         }
 
-        // 和棋弹窗
+        // 求饶(原和棋)弹窗 - 只有对方会收到
         if (s.pendingDraw) {
             AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
-                .setTitle("和棋提议")
-                .setMessage("对方提议和棋, 是否同意?")
-                .setPositiveButton("同意") { _, _ -> WebSocketClient.sendDrawResponse(true) }
-                .setNegativeButton("拒绝") { _, _ -> WebSocketClient.sendDrawResponse(false) }
+                .setTitle("对方求饶 🥺")
+                .setMessage("求求你让我一下好不好? 😭\n\n(已向你请求和棋)")
+                .setPositiveButton("饶了ta") { _, _ -> WebSocketClient.sendDrawResponse(true) }
+                .setNegativeButton("绝不轻饶") { _, _ -> WebSocketClient.sendDrawResponse(false) }
                 .setCancelable(false)
                 .show()
         }
 
-        // 游戏结束
-        if (s.status == "finished" && s.gameOverAnnounced && lastGameOverReason != s.winReason + s.winner) {
-            lastGameOverReason = s.winReason + s.winner
-            val title = when (s.winner) {
-                s.mySeat -> "恭喜获胜!"
-                0 -> "和棋"
-                else -> "惜败"
+        // 求饶响应反馈 (我方发起的求饶, 收到对方响应)
+        s.drawResponseResult?.let { result ->
+            if (result == "accepted") {
+                AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+                    .setTitle("🥹 对方心软啦!")
+                    .setMessage("对方揉了揉你的头:\n\"算了算了, 这次就饶了你, 以后可不许再偷懒哦~\" 💕")
+                    .setPositiveButton("知道啦~", null)
+                    .setCancelable(false)
+                    .show()
+            } else {
+                AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+                    .setTitle("💢 啪! 一巴掌!")
+                    .setMessage("对方冷酷地拒绝了你, 还反手给了你一巴掌 👋\n\n\"给我继续下! 绝不服输!\" 😤💥")
+                    .setPositiveButton("呜呜呜", null)
+                    .setCancelable(false)
+                    .show()
             }
-            AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
-                .setTitle(title)
-                .setMessage(gameOverText(s))
-                .setPositiveButton("查看战绩") { _, _ ->
-                    startActivity(Intent(this, com.gomoku.app.ui.records.RecordsActivity::class.java))
+            viewModel.consumeDrawResponse()
+        }
+
+        // 记录游戏开始时间
+        if (s.status == "playing" && gameStartTimestamp == 0L) {
+            gameStartTimestamp = System.currentTimeMillis()
+        }
+        if (s.status != "playing" && s.status != "finished") {
+            gameStartTimestamp = 0L
+        }
+        if (s.status == "finished") {
+            // 步数从 room_state 的 moves 数量计算 (近似)
+            // 因为 room_state payload 中我们用 lastMove, 不再含 moves 数组, 暂用 lastKnownMoves
+        }
+
+        // ============== 结算框 ==============
+        if (s.status == "finished" && s.gameOverAnnounced && s.gameOverTimestamp > 0
+            && gameOverDialog == null) {
+            showGameOverDialog(s)
+        }
+        // rematch_start 触发时关闭结算框
+        if (s.status == "playing" && gameOverDialog != null) {
+            gameOverDialog?.onRematchAccepted()
+            gameOverDialog = null
+            // 也关闭 rematch 提议框(若开着)
+            rematchOfferDialog?.dismiss()
+            rematchOfferDialog = null
+        }
+
+        // ============== 对方要求 rematch ==============
+        if (s.pendingRematchOffer && rematchOfferDialog == null) {
+            showRematchOfferDialog(s)
+        }
+
+        // ============== 等待对方回应(我方已点"不服再战") ==============
+        if (s.waitingMyRematch && gameOverDialog != null) {
+            gameOverDialog?.let { d ->
+                if (d.isShowing) {
+                    // 让对话框处于等待状态
                 }
-                .setNegativeButton("继续") { _, _ -> }
-                .setCancelable(true)
-                .show()
+            }
+        }
+
+        // ============== 一方拒绝(rematchCancelled) ==============
+        if (s.rematchCancelled) {
+            handleRematchCancel(s)
         }
 
         // 对手离开
         if (s.opponentLeft) {
-            Toast.makeText(this, "对手已离开", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "对方已离开", Toast.LENGTH_SHORT).show()
             viewModel.consumeOpponentLeft()
         }
 
@@ -221,39 +273,139 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun gameOverText(s: GameUiState): String {
-        val reasonText = when (s.winReason) {
-            "black_win" -> "黑方五连, 获胜!"
-            "white_win" -> "白方五连, 获胜!"
-            "draw" -> "和棋"
-            "resign" -> if (s.winner == 1) "白方认输, 黑方获胜!" else "黑方认输, 白方获胜!"
-            "timeout" -> if (s.winner == 1) "白方超时, 黑方获胜!" else "黑方超时, 白方获胜!"
-            else -> "对局结束"
+    private var lastSelectionState: Boolean = false
+    private fun hasSelectionCheck(): Boolean = lastSelectionState
+
+    private fun showGameOverDialog(s: GameUiState) {
+        val durationSec = ((System.currentTimeMillis() - gameStartTimestamp) / 1000).toInt()
+        gameOverDialog = GameOverDialog(
+            context = this,
+            mySeat = s.mySeat,
+            winner = s.winner,
+            reason = s.winReason,
+            durationSec = if (durationSec > 0) durationSec else 1,
+            totalMoves = s.moveCount,
+            onBackHome = {
+                WebSocketClient.sendLeaveRoom()
+                WebSocketClient.disconnect()
+                startActivity(Intent(this, com.gomoku.app.ui.home.HomeActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                finish()
+            },
+            onRematch = {
+                WebSocketClient.sendRematchRequest()
+                viewModel.markRematchRequested()
+            }
+        )
+        gameOverDialog?.show()
+    }
+
+    private fun showRematchOfferDialog(s: GameUiState) {
+        val fromName = if (s.rematchOfferFrom == Stone.BLACK) s.blackName else s.whiteName
+        rematchOfferDialog = RematchOfferDialog(
+            context = this,
+            fromSeat = s.rematchOfferFrom,
+            fromName = fromName,
+            onAccept = {
+                WebSocketClient.sendRematchResponse(true)
+                viewModel.consumeRematchOffer()
+                Toast.makeText(this, "已接下挑战!", Toast.LENGTH_SHORT).show()
+            },
+            onReject = {
+                WebSocketClient.sendRematchResponse(false)
+                viewModel.consumeRematchOffer()
+            }
+        )
+        rematchOfferDialog?.show()
+    }
+
+    private fun handleRematchCancel(s: GameUiState) {
+        val msg = when (s.rematchCancelReason) {
+            "rejected" -> {
+                if (s.rematchRejectCount >= 2) {
+                    "对方已两次拒绝挑战, 房间结束~"
+                } else {
+                    "对方拒绝挑战 (${s.rematchRejectCount}/2 次)"
+                }
+            }
+            "too_many_rejects" -> "对方已两次拒绝, 房间结束~"
+            "opponent_offline" -> "对方不在线, 房间结束~"
+            else -> "对方拒绝了, 房间结束~"
         }
-        return reasonText
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+        viewModel.consumeRematchCancel()
+        // 关闭弹窗
+        rematchOfferDialog?.dismiss()
+        rematchOfferDialog = null
+        gameOverDialog?.dismiss()
+        gameOverDialog = null
+        // 如果还能再求一次(只拒绝1次), 给"求对方再战"按钮
+        if (s.rematchRejectCount == 1) {
+            AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+                .setTitle("😢 ta 不愿意...")
+                .setMessage("要不再求一次对方陪你下棋?")
+                .setPositiveButton("再求一次") { _, _ ->
+                    // 重新发 rematch_request, 服务端会清除本座位旧的请求
+                    WebSocketClient.sendRematchRequest()
+                    // 重新弹"等待回应"提示
+                    AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+                        .setTitle("⏳ 已再次发出")
+                        .setMessage("等待对方回应中…")
+                        .setPositiveButton("好的") { d, _ -> d.dismiss() }
+                        .setCancelable(false)
+                        .show()
+                }
+                .setNegativeButton("算了吧") { _, _ ->
+                    WebSocketClient.sendLeaveRoom()
+                    WebSocketClient.disconnect()
+                    startActivity(Intent(this, com.gomoku.app.ui.home.HomeActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                    finish()
+                }
+                .setCancelable(false)
+                .show()
+        } else {
+            // 两次拒绝, 直接退出
+            AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+                .setTitle("💔 算啦算啦")
+                .setMessage("对方两次都拒绝啦, 我们回主页吧~")
+                .setPositiveButton("回主页") { _, _ ->
+                    WebSocketClient.sendLeaveRoom()
+                    WebSocketClient.disconnect()
+                    startActivity(Intent(this, com.gomoku.app.ui.home.HomeActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                    finish()
+                }
+                .setCancelable(false)
+                .show()
+        }
+    }
+
+    private fun confirmResign() {
+        AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+            .setTitle("认输")
+            .setMessage("确认认输吗? 真的认输吗?")
+            .setPositiveButton("认输") { _, _ -> WebSocketClient.sendResign() }
+            .setNegativeButton("再战一会", null)
+            .show()
+    }
+
+    private fun confirmBeg() {
+        // 已废弃: 点击求饶不再需要确认, 直接发送
+    }
+
+    private fun showEmojiDialog() {
+        val emojis = arrayOf("😀", "😂", "🥰", "😘", "🤗", "💕", "💋", "😡", "😱", "🤔", "👍", "👎", "🙏", "🎉", "😴", "🤨", "🥺", "💪", "🙄", "😭", "🤭")
+        AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
+            .setTitle("选个表情")
+            .setItems(emojis) { _, which -> WebSocketClient.sendEmoji(emojis[which]) }
+            .show()
     }
 
     private fun formatTime(sec: Int): String {
         val m = sec / 60
         val s = sec % 60
         return String.format("%02d:%02d", m, s)
-    }
-
-    private fun confirmResign() {
-        AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
-            .setTitle("认输")
-            .setMessage("确认认输?")
-            .setPositiveButton("确认") { _, _ -> WebSocketClient.sendResign() }
-            .setNegativeButton("取消", null)
-            .show()
-    }
-
-    private fun showEmojiDialog() {
-        val emojis = arrayOf("😀", "😂", "😍", "😎", "😡", "😱", "🤔", "👍", "👎", "🙏", "🎉", "💔")
-        AlertDialog.Builder(this, R.style.Theme_Gomoku_Dialog)
-            .setTitle("选择表情")
-            .setItems(emojis) { _, which -> WebSocketClient.sendEmoji(emojis[which]) }
-            .show()
     }
 
     private inner class ChatAdapter : RecyclerView.Adapter<ChatAdapter.VH>() {

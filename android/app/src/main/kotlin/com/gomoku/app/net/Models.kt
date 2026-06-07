@@ -15,6 +15,8 @@ object MsgType {
     const val DRAW_RESPONSE = "draw_response"
     const val CHAT = "chat"
     const val EMOJI = "emoji"
+    const val REMATCH_REQUEST = "rematch_request"
+    const val REMATCH_RESPONSE = "rematch_response"
 
     // S2C
     const val ERROR = "error"
@@ -32,6 +34,10 @@ object MsgType {
     const val S2C_EMOJI = "emoji"
     const val OPPONENT_LEFT = "opponent_left"
     const val CLOCK = "clock"
+    const val S2C_REMATCH_REQUEST = "rematch_request"
+    const val S2C_REMATCH_RESPONSE = "rematch_response"
+    const val S2C_REMATCH_START = "rematch_start"
+    const val S2C_REMATCH_CANCEL = "rematch_cancel"
 }
 
 object Stone {

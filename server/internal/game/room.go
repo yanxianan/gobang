@@ -13,6 +13,8 @@ const (
 	RoomWaiting  = "waiting"
 	RoomPlaying  = "playing"
 	RoomFinished = "finished"
+	// rematching 中间状态: 已finished, 等待双方 rematch 决定
+	// (不新增状态, 沿用 finished + Rematch 字段组合表达)
 )
 
 // Room 一局对局
@@ -34,7 +36,13 @@ type Room struct {
 	CreatedAt  time.Time
 	StartedAt  time.Time
 	EndedAt    time.Time
-	mu         sync.Mutex
+	// rematch 相关
+	GameNo        int  // 当前是第几局, 从1开始
+	RematchSeat1  bool // 1号位是否已表态 (true=接受)
+	RematchSeat2  bool // 2号位是否已表态
+	RejectCount   int  // 对方拒绝后再求的累计拒绝次数
+	FirstSeatHistory [16]int // 历任先手, 取最新非0值用于交换判断
+	mu            sync.Mutex
 }
 
 type UndoRequest struct {
@@ -53,6 +61,7 @@ func NewRoom(id string, timeLimit int) *Room {
 		TimeLimit: timeLimit,
 		Status:    RoomWaiting,
 		Board:     NewBoard(),
+		GameNo:    0,
 		CreatedAt: time.Now(),
 	}
 }
@@ -125,7 +134,94 @@ func (r *Room) TryStart() bool {
 		r.WhiteTime = r.TimeLimit
 	}
 	r.StartedAt = time.Now()
+	r.GameNo = 1
 	return true
+}
+
+// RequestRematch 座位 seat 请求 rematch
+// 返回 (accepted, errMsg)  座位是否成功标记, 以及错误信息
+func (r *Room) RequestRematch(seat int) (bool, string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.Status != RoomFinished {
+		return false, "对局未结束, 暂不能求再战"
+	}
+	if r.RejectCount >= 2 {
+		return false, "对方已两次拒绝, 房间将结束"
+	}
+	if seat == 1 {
+		r.RematchSeat1 = true
+	} else {
+		r.RematchSeat2 = true
+	}
+	return true, ""
+}
+
+// RespondRematch 座位 seat 响应 (accept=true接受, false拒绝)
+func (r *Room) RespondRematch(seat int, accept bool) (bothAccepted bool, rejectCount int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !accept {
+		// 拒绝: 增加计数, 清除该座位与对方的rematch标志, 维持finished状态
+		if seat == 1 {
+			r.RematchSeat1 = false
+		} else {
+			r.RematchSeat2 = false
+		}
+		r.RejectCount++
+		rejectCount = r.RejectCount
+		bothAccepted = false
+		return
+	}
+	// 接受
+	if seat == 1 {
+		r.RematchSeat1 = true
+	} else {
+		r.RematchSeat2 = true
+	}
+	bothAccepted = r.RematchSeat1 && r.RematchSeat2
+	return
+}
+
+// ResetForNewGame 开始新一局 (双方都已接受rematch)
+// 规则: 新一局交换先手 (上局黑先则这局白先, 依此类推)
+func (r *Room) ResetForNewGame() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	// 交换先手
+	var newFirst int
+	if r.Turn == 1 {
+		newFirst = 2
+	} else {
+		newFirst = 1
+	}
+	r.Board = NewBoard()
+	r.Status = RoomPlaying
+	r.Turn = newFirst
+	r.Winner = 0
+	r.WinReason = ""
+	r.UndoReq = nil
+	r.DrawOffer = nil
+	r.RematchSeat1 = false
+	r.RematchSeat2 = false
+	r.GameNo++
+	if r.TimeLimit > 0 {
+		r.BlackTime = r.TimeLimit
+		r.WhiteTime = r.TimeLimit
+	}
+	r.StartedAt = time.Now()
+	r.EndedAt = time.Time{}
+}
+
+// ClearRematchRequest 清除本座位的rematch请求 (用于"再求一次"时重置)
+func (r *Room) ClearRematchRequest(seat int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if seat == 1 {
+		r.RematchSeat1 = false
+	} else {
+		r.RematchSeat2 = false
+	}
 }
 
 // PlaceMove 在当前轮次落子
@@ -326,4 +422,13 @@ func (r *Room) Snapshot() proto.RoomStatePayload {
 		BlackTime: r.BlackTime,
 		WhiteTime: r.WhiteTime,
 	}
+}
+
+// GameDurationSec 本局持续秒数
+func (r *Room) GameDurationSec() int {
+	end := r.EndedAt
+	if end.IsZero() {
+		end = time.Now()
+	}
+	return int(end.Sub(r.StartedAt).Seconds())
 }

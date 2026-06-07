@@ -1996,7 +1996,7 @@
     <string description="The content description of bottom sheet drag handles [CHAR LIMIT=NONE]" name="bottomsheet_drag_handle_content_description">Drag handle</string>
     <string name="btn_back">返回</string>
     <string name="btn_create">创建房间</string>
-    <string name="btn_draw">求和</string>
+    <string name="btn_draw">求饶</string>
     <string name="btn_emoji">表情</string>
     <string name="btn_join">加入房间</string>
     <string name="btn_records">战绩回放</string>
@@ -2153,7 +2153,7 @@
     <string name="side_sheet_behavior" translatable="false">com.google.android.material.sidesheet.SideSheetBehavior</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="status_opp_turn">等待对手走子</string>
-    <string name="status_waiting">等待对手…</string>
+    <string name="status_waiting">等待对手加入…</string>
     <string name="status_your_turn">轮到你走</string>
     <string name="time_30s">30秒/步</string>
     <string name="time_60s">60秒/步</string>
